@@ -1,7 +1,10 @@
 // @ts-expect-error I think this thinks its in browser?
 import { parseStream } from "music-metadata";
-import { AudioQuality, PlaybackContext } from "../../AudioQualityTypes";
-import { type ExtendedPlayackInfo, ManifestMimeType } from "../../Caches/PlaybackInfoTypes";
+import type { AudioQuality, PlaybackContext } from "../../AudioQualityTypes";
+import {
+	type ExtendedPlayackInfo,
+	ManifestMimeType,
+} from "../../Caches/PlaybackInfoTypes";
 import { requestTrackStream } from "./request/requestTrack.native";
 
 export type TrackInfo = {
@@ -15,8 +18,18 @@ export type TrackInfo = {
 	bitrate?: number;
 };
 
-export const getTrackInfo = async (playbackContext: PlaybackContext, extPlaybackInfo: ExtendedPlayackInfo): Promise<TrackInfo> => {
-	let { actualProductId: trackId, actualAudioQuality: audioQuality, bitDepth, sampleRate, codec, actualDuration: duration } = playbackContext;
+export const getTrackInfo = async (
+	playbackContext: PlaybackContext,
+	extPlaybackInfo: ExtendedPlayackInfo,
+): Promise<TrackInfo> => {
+	const {
+		actualProductId: trackId,
+		actualAudioQuality: audioQuality,
+		bitDepth,
+		sampleRate,
+		codec,
+		actualDuration: duration,
+	} = playbackContext;
 	const { manifestMimeType, manifest, playbackInfo } = extPlaybackInfo;
 
 	const trackInfo: TrackInfo = {
@@ -30,9 +43,17 @@ export const getTrackInfo = async (playbackContext: PlaybackContext, extPlayback
 
 	// Fallback to parsing metadata if info is not in context
 	if (bitDepth === null || sampleRate === null || duration === null) {
-		const stream = await requestTrackStream(extPlaybackInfo, { bytesWanted: 256, onProgress: ({ total }) => (trackInfo.bytes = total) });
+		const stream = await requestTrackStream(extPlaybackInfo, {
+			bytesWanted: 256,
+			onProgress: ({ total }) => (trackInfo.bytes = total),
+		});
 		// note that you cannot trust bytes to be populated until the stream is finished. parseStream will read the entire stream ensuring this
-		const { format } = await parseStream(stream, { mimeType: manifestMimeType === ManifestMimeType.Tidal ? manifest.mimeType : "audio/mp4" });
+		const { format } = await parseStream(stream, {
+			mimeType:
+				manifestMimeType === ManifestMimeType.Tidal
+					? manifest.mimeType
+					: "audio/mp4",
+		});
 
 		trackInfo.bitDepth ??= format.bitsPerSample! ?? 16;
 		trackInfo.sampleRate ??= format.sampleRate!;
@@ -45,11 +66,17 @@ export const getTrackInfo = async (playbackContext: PlaybackContext, extPlayback
 			trackInfo.bytes = manifest.tracks.audios[0].size?.b;
 		}
 	} else {
-		await requestTrackStream(extPlaybackInfo, { requestOptions: { method: "HEAD" }, onProgress: ({ total }) => (trackInfo.bytes = total) });
-		trackInfo.audioQuality = <AudioQuality>playbackInfo.audioQuality ?? audioQuality;
+		await requestTrackStream(extPlaybackInfo, {
+			requestOptions: { method: "HEAD" },
+			onProgress: ({ total }) => (trackInfo.bytes = total),
+		});
+		trackInfo.audioQuality =
+			<AudioQuality>playbackInfo.audioQuality ?? audioQuality;
 	}
 
-	trackInfo.bitrate ??= !!trackInfo.bytes ? (trackInfo.bytes / duration) * 8 : undefined;
+	trackInfo.bitrate ??= trackInfo.bytes
+		? (trackInfo.bytes / duration) * 8
+		: undefined;
 
 	return trackInfo;
 };

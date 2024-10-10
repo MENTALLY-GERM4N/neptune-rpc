@@ -1,25 +1,33 @@
 import { intercept } from "@neptune";
 import { Tracer } from "@inrixia/lib/trace";
-import { settings } from "./Settings";
 import getPlaybackControl from "@inrixia/lib/getPlaybackControl";
-import { MediaItem, MediaItemCache } from "@inrixia/lib/Caches/MediaItemCache";
+import {
+	type MediaItem,
+	MediaItemCache,
+} from "@inrixia/lib/Caches/MediaItemCache";
 import type { SetActivity } from "@xhayper/discord-rpc";
-export { Settings } from "./Settings";
 import "./discord.native";
 
 const trace = Tracer("[DiscordRPC]");
 const STR_MAX_LEN = 127;
 const formatString = (s?: string) => {
 	if (!s) return;
-	if (s.length < 2) s += " ";
-	return s.length >= STR_MAX_LEN ? s.slice(0, STR_MAX_LEN - 3) + "..." : s;
+	let formattedString = s;
+	if (formattedString.length < 2) formattedString += " ";
+	return formattedString.length >= STR_MAX_LEN
+		? `${formattedString.slice(0, STR_MAX_LEN - 3)}...`
+		: formattedString;
 };
 const getMediaURL = (id?: string, path = "/1280x1280.jpg") =>
-	id && "https://resources.tidal.com/images/" + id.split("-").join("/") + path;
+	id && `https://resources.tidal.com/images/${id.split("-").join("/")}${path}`;
 
 let track: MediaItem | undefined;
 let paused = true;
 let time = 0;
+
+interface act extends SetActivity {
+	name: string | undefined;
+}
 
 export function update(data?: {
 	track?: MediaItem;
@@ -31,34 +39,27 @@ export function update(data?: {
 	time = data?.time ?? time;
 
 	// Clear activity if no track or paused
-	if (!track || (paused && !settings.keepRpcOnPause)) return setRPC();
+	if (!track || paused) return setRPC();
 
-	const activity: SetActivity = { type: 2 }; // Listening type
+	const activity: act = {
+		type: 2,
+		name: formatString(track.title),
+		smallImageText: `${getComputedStyle(document.body).getPropertyValue("--track-vibrant-color")}|${track.id}`,
+	};
 
-	if (settings.displayPlayButton)
-		activity.buttons = [
-			{
-				url: `https://tidal.com/browse/${track.contentType}/${track.id}?u`,
-				label: "Play Song",
-			},
-		];
+	activity.buttons = [
+		{
+			url: `https://tidal.com/browse/${track.contentType}/${track.id}?u`,
+			label: "Play Song",
+		},
+	];
 
 	// Pause indicator
-	if (paused) {
-		activity.smallImageKey = "paused-icon";
-		activity.smallImageText = "Paused";
-	} else {
+	if (!paused) {
 		// Playback/Time
 		if (track.duration !== undefined) {
 			activity.startTimestamp = Date.now() - time * 1000;
 			activity.endTimestamp = activity.startTimestamp + track.duration * 1000;
-		}
-
-		// Artist image
-		if (settings.displayArtistImage) {
-			const artist = track.artist ?? track.artists?.[0];
-			activity.smallImageKey = getMediaURL(artist?.picture, "/320x320.jpg");
-			activity.smallImageText = formatString(artist?.name);
 		}
 	}
 
@@ -92,7 +93,7 @@ const unloadTransition = intercept(
 				if (track) update({ track, time: 0 });
 			})
 			.catch(trace.err.withContext("Failed to fetch media item"));
-	}
+	},
 );
 
 const unloadTime = intercept("playbackControls/TIME_UPDATE", ([newTime]) => {
@@ -107,7 +108,7 @@ const unloadPlay = intercept(
 	"playbackControls/SET_PLAYBACK_STATE",
 	([state]) => {
 		if (paused && state === "PLAYING") update({ paused: false });
-	}
+	},
 );
 
 const unloadPause = intercept("playbackControls/PAUSE", () => {

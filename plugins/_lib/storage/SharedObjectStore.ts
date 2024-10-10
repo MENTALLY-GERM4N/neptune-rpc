@@ -1,18 +1,24 @@
-import { openDB, IDBPDatabase } from "idb";
+import { openDB, type IDBPDatabase } from "idb";
 import { Semaphore } from "../Semaphore";
 
 const dbName = "@inrixia/sharedStorage";
-export class SharedObjectStore<K extends IDBValidKey, V extends Record<any, any>> {
+export class SharedObjectStore<
+	K extends IDBValidKey,
+	V extends Record<any, any>,
+> {
 	public static db: Promise<IDBPDatabase>;
 	private static openSema: Semaphore = new Semaphore(1);
-	private static async openDB(storeName: string, storeSchema?: IDBObjectStoreParameters) {
-		const release = await this.openSema.obtain();
+	private static async openDB(
+		storeName: string,
+		storeSchema?: IDBObjectStoreParameters,
+	) {
+		const release = await SharedObjectStore.openSema.obtain();
 		try {
 			const reOpen = (db: IDBPDatabase) => async () => {
 				await db.close();
-				this.openDB(storeName, storeSchema);
+				SharedObjectStore.openDB(storeName, storeSchema);
 			};
-			this.db = openDB(dbName).then(async (db) => {
+			SharedObjectStore.db = openDB(dbName).then(async (db) => {
 				db.addEventListener("versionchange", reOpen(db));
 				if (db.objectStoreNames.contains(storeName)) return db;
 				await db.close();
@@ -23,21 +29,26 @@ export class SharedObjectStore<K extends IDBValidKey, V extends Record<any, any>
 					},
 				});
 			});
-			const _db = await this.db;
+			const _db = await SharedObjectStore.db;
 			_db.addEventListener("versionchange", reOpen(_db));
 		} finally {
 			release();
 		}
 	}
 	public static close() {
-		return this.db?.then((db) => db.close());
+		return SharedObjectStore.db?.then((db) => db.close());
 	}
 
-	constructor(protected readonly storeName: string, storeSchema?: IDBObjectStoreParameters) {
+	constructor(
+		protected readonly storeName: string,
+		storeSchema?: IDBObjectStoreParameters,
+	) {
 		SharedObjectStore.openDB(storeName, storeSchema);
 	}
 	add(value: V, key?: K) {
-		return SharedObjectStore.db.then((db) => db.add(this.storeName, value, key));
+		return SharedObjectStore.db.then((db) =>
+			db.add(this.storeName, value, key),
+		);
 	}
 	clear() {
 		return SharedObjectStore.db.then((db) => db.clear(this.storeName));
@@ -52,15 +63,21 @@ export class SharedObjectStore<K extends IDBValidKey, V extends Record<any, any>
 		return SharedObjectStore.db.then((db) => db.get(this.storeName, key));
 	}
 	getAll(key?: K | null, count?: number) {
-		return SharedObjectStore.db.then((db) => db.getAll(this.storeName, key, count));
+		return SharedObjectStore.db.then((db) =>
+			db.getAll(this.storeName, key, count),
+		);
 	}
 	getAllKeys(key?: K | null, count?: number) {
-		return SharedObjectStore.db.then((db) => db.getAllKeys(this.storeName, key, count));
+		return SharedObjectStore.db.then((db) =>
+			db.getAllKeys(this.storeName, key, count),
+		);
 	}
 	getKey(key: K) {
 		return SharedObjectStore.db.then((db) => db.getKey(this.storeName, key));
 	}
 	put(value: V, key?: K) {
-		return SharedObjectStore.db.then((db) => db.put(this.storeName, value, key));
+		return SharedObjectStore.db.then((db) =>
+			db.put(this.storeName, value, key),
+		);
 	}
 }

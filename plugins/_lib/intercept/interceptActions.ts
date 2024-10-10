@@ -1,6 +1,9 @@
 import { intercept } from "@neptune";
-import { ActionType, UninterceptFunction } from "neptune-types/api/intercept";
-import { ActionTypes } from "neptune-types/tidal";
+import type {
+	ActionType,
+	UninterceptFunction,
+} from "neptune-types/api/intercept";
+import type { ActionTypes } from "neptune-types/tidal";
 
 function convertToUpperCaseWithUnderscores(str: string) {
 	return str
@@ -8,14 +11,26 @@ function convertToUpperCaseWithUnderscores(str: string) {
 		.toUpperCase(); // Convert to uppercase
 }
 const neptuneActions = window.neptune.actions;
-export type ActionHandler = <AT extends ActionType>(interceptPath: AT, payload: ActionTypes[AT]) => void;
-export const interceptActions = (actionPath: RegExp, handler: ActionHandler) => {
+export type ActionHandler = <AT extends ActionType>(
+	interceptPath: AT,
+	payload: ActionTypes[AT],
+) => void;
+export const interceptActions = (
+	actionPath: RegExp,
+	handler: ActionHandler,
+) => {
 	const unloadables: UninterceptFunction[] = [];
 	for (const item in neptuneActions) {
-		for (const action in window.neptune.actions[<keyof typeof neptuneActions>item]) {
+		for (const action in window.neptune.actions[
+			<keyof typeof neptuneActions>item
+		]) {
 			const interceptPath = `${item}/${convertToUpperCaseWithUnderscores(action)}`;
 			if (!actionPath.test(interceptPath)) continue;
-			unloadables.push(intercept(<ActionType>interceptPath, (payload) => handler(payload[1], payload[0])));
+			unloadables.push(
+				intercept(<ActionType>interceptPath, (payload) =>
+					handler(payload[1], payload[0]),
+				),
+			);
 		}
 	}
 	return () => unloadables.forEach((u) => u());

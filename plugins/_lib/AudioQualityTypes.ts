@@ -14,7 +14,10 @@ export enum QualityTag {
 	DolbyAtmos = "DOLBY_ATMOS",
 	Sony630 = "SONY_360RA",
 }
-export const lookupItemQuality = (qualityTag: QualityTag, audioQuality: TrackItem["audioQuality"]) => {
+export const lookupItemQuality = (
+	qualityTag: QualityTag,
+	audioQuality: TrackItem["audioQuality"],
+) => {
 	switch (qualityTag) {
 		case QualityTag.HiRes:
 			return AudioQuality.HiRes;
@@ -68,14 +71,31 @@ export const QualityMeta = {
 	[QualityTag.High]: { textContent: "High", color: "#33FFEE" },
 	[QualityTag.DolbyAtmos]: { textContent: "Atmos", color: "#6ab5ff" },
 	[QualityTag.Sony630]: undefined,
-	["LOW"]: { textContent: "Low", color: "#b9b9b9" },
+	LOW: { textContent: "Low", color: "#b9b9b9" },
 } as const;
 
-const qualityOrder = [QualityTag.HiRes, QualityTag.MQA, QualityTag.High, QualityTag.DolbyAtmos, QualityTag.Sony630, "LOW"];
-export const sortQualityTags = (array?: QualityTag[]): QualityTag[] => (array ?? []).sort((a, b) => qualityOrder.indexOf(a) - qualityOrder.indexOf(b));
+const qualityOrder = [
+	QualityTag.HiRes,
+	QualityTag.MQA,
+	QualityTag.High,
+	QualityTag.DolbyAtmos,
+	QualityTag.Sony630,
+	"LOW",
+];
+export const sortQualityTags = (array?: QualityTag[]): QualityTag[] =>
+	(array ?? []).sort(
+		(a, b) => qualityOrder.indexOf(a) - qualityOrder.indexOf(b),
+	);
 
 export const audioQualities = Object.values(AudioQuality);
 // Dont show MQA as a option as if HiRes is avalible itl always be served even if MQA is requested.
-export const validQualitiesSettings: AudioQuality[] = [AudioQuality.HiRes, AudioQuality.High, AudioQuality.Low, AudioQuality.Lowest];
+export const validQualitiesSettings: AudioQuality[] = [
+	AudioQuality.HiRes,
+	AudioQuality.High,
+	AudioQuality.Low,
+	AudioQuality.Lowest,
+];
 
-export const AudioQualityInverse = Object.fromEntries(Object.entries(AudioQuality).map(([key, value]) => [value, key]));
+export const AudioQualityInverse = Object.fromEntries(
+	Object.entries(AudioQuality).map(([key, value]) => [value, key]),
+);

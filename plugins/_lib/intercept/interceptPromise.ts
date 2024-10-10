@@ -1,11 +1,18 @@
 import { intercept } from "@neptune";
-import { ActionType, CallbackFunction, PayloadActionTypeTuple } from "neptune-types/api/intercept";
+import type {
+	ActionType,
+	CallbackFunction,
+	PayloadActionTypeTuple,
+} from "neptune-types/api/intercept";
 
-export const interceptPromise = <RESAT extends ActionType, REJAT extends ActionType>(
+export const interceptPromise = <
+	RESAT extends ActionType,
+	REJAT extends ActionType,
+>(
 	trigger: Function,
 	resActionType: RESAT[],
 	rejActionType: REJAT[],
-	{ timeoutMs, cancel }: { timeoutMs?: number; cancel?: boolean } = {}
+	{ timeoutMs, cancel }: { timeoutMs?: number; cancel?: boolean } = {},
 ): Promise<PayloadActionTypeTuple<RESAT>> => {
 	timeoutMs ??= 5000;
 	cancel ??= false;
@@ -21,10 +28,13 @@ export const interceptPromise = <RESAT extends ActionType, REJAT extends ActionT
 			res(payload);
 			if (cancel) return true;
 		},
-		true
+		true,
 	);
 	const unloadRej = intercept(rejActionType, rej!, true);
-	const timeout = setTimeout(() => rej(`${rejActionType ?? resActionType}_TIMEOUT`), timeoutMs);
+	const timeout = setTimeout(
+		() => rej(`${rejActionType ?? resActionType}_TIMEOUT`),
+		timeoutMs,
+	);
 	trigger();
 	return p.finally(() => {
 		clearTimeout(timeout);

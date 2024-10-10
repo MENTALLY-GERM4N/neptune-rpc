@@ -1,7 +1,13 @@
 import { SharedObjectStore } from "./SharedObjectStore";
 
-type ValueWithExpiry<V> = { value: V; expires: number; expired: boolean } | { value: V; expires: undefined; expired: true } | { value: undefined; expires: undefined; expired: undefined };
-export class SharedObjectStoreExpirable<K extends IDBValidKey, V extends Record<any, any> & { __expires?: never }> extends SharedObjectStore<K, V> {
+type ValueWithExpiry<V> =
+	| { value: V; expires: number; expired: boolean }
+	| { value: V; expires: undefined; expired: true }
+	| { value: undefined; expires: undefined; expired: undefined };
+export class SharedObjectStoreExpirable<
+	K extends IDBValidKey,
+	V extends Record<any, any> & { __expires?: never },
+> extends SharedObjectStore<K, V> {
 	private readonly maxAge?: number;
 	constructor(
 		storeName: string,
@@ -11,7 +17,7 @@ export class SharedObjectStoreExpirable<K extends IDBValidKey, V extends Record<
 			 */
 			maxAge?: number;
 			storeSchema?: IDBObjectStoreParameters;
-		}
+		},
 	) {
 		const { maxAge, storeSchema } = options ?? {};
 		super(storeName, storeSchema);
@@ -19,11 +25,12 @@ export class SharedObjectStoreExpirable<K extends IDBValidKey, V extends Record<
 	}
 	private setExpires(value: any, expires?: number): void {
 		if (expires !== undefined) value.__expires = expires;
-		else if (this.maxAge !== undefined) value.__expires = Date.now() + this.maxAge;
+		else if (this.maxAge !== undefined)
+			value.__expires = Date.now() + this.maxAge;
 		else throw new Error("maxAge or expires must be set!");
 	}
 	private clearExpires(value: any): void {
-		delete value.__expires;
+		value.__expires = undefined;
 	}
 	private isTooOld(value?: V): boolean {
 		if (value?.__expires === undefined) return true;
@@ -53,7 +60,8 @@ export class SharedObjectStoreExpirable<K extends IDBValidKey, V extends Record<
 	}
 	async getWithExpiry(key: K): Promise<ValueWithExpiry<V>> {
 		const value = await super.get(key);
-		if (value === undefined) return { value: undefined, expires: undefined, expired: undefined };
+		if (value === undefined)
+			return { value: undefined, expires: undefined, expired: undefined };
 		const expires = value.__expires;
 		const expired = this.isTooOld(value);
 		this.clearExpires(value);
@@ -61,6 +69,8 @@ export class SharedObjectStoreExpirable<K extends IDBValidKey, V extends Record<
 	}
 	async getAll(key?: K | null, count?: number) {
 		const values = await super.getAll(key, count);
-		return values.filter(this.isTooOld.bind(this)).map(this.clearExpires.bind(this));
+		return values
+			.filter(this.isTooOld.bind(this))
+			.map(this.clearExpires.bind(this));
 	}
 }

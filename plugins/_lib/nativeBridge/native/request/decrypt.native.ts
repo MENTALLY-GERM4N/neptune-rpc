@@ -1,4 +1,4 @@
-import { createDecipheriv } from "crypto";
+import { createDecipheriv } from "node:crypto";
 import type { TidalManifest } from "../../../Caches/PlaybackInfoTypes";
 
 // Do not change this
@@ -19,7 +19,11 @@ const decryptKeyId = (keyId: string): DecryptedKey => {
 	const keyIdEnc = keyIdBuffer.subarray(16);
 
 	// Initialize decryptor
-	const decryptor = createDecipheriv("aes-256-cbc", Uint8Array.from(mastKeyBuffer), Uint8Array.from(iv));
+	const decryptor = createDecipheriv(
+		"aes-256-cbc",
+		Uint8Array.from(mastKeyBuffer),
+		Uint8Array.from(iv),
+	);
 
 	// Decrypt the security token
 	const keyIdDec = decryptor.update(Uint8Array.from(keyIdEnc));
@@ -46,7 +50,9 @@ export const makeDecipher = (manifest: TidalManifest) => {
 			return undefined;
 		}
 		default: {
-			throw new Error(`Unexpected manifest encryption type ${manifest.encryptionType}`);
+			throw new Error(
+				`Unexpected manifest encryption type ${manifest.encryptionType}`,
+			);
 		}
 	}
 };

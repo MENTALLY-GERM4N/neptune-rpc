@@ -1,5 +1,5 @@
 import { actions } from "@neptune";
-import { Message, Severity } from "neptune-types/tidal";
+import type { Message, Severity } from "neptune-types/tidal";
 
 type LoggerFunc = (...data: any[]) => void;
 type MessengerFunc = (messageInfo: Message) => void;
@@ -33,10 +33,18 @@ export const Tracer = (source: string) => {
 	const err = createLogger(console.error);
 	const debug = createLogger(console.debug);
 
-	const createMessager = (logger: Logger, messager: MessengerFunc, severity: Severity): Messenger => {
+	const createMessager = (
+		logger: Logger,
+		messager: MessengerFunc,
+		severity: Severity,
+	): Messenger => {
 		const _messager = (message: unknown) => {
 			logger(message);
-			messager({ message: `${source} - ${message}`, category: "OTHER", severity });
+			messager({
+				message: `${source} - ${message}`,
+				category: "OTHER",
+				severity,
+			});
 			return undefined;
 		};
 		_messager.withContext = (context: string) => {
@@ -44,7 +52,11 @@ export const Tracer = (source: string) => {
 			return (message: unknown) => {
 				loggerWithContext(message);
 				if (message instanceof Error) message = message.message;
-				messager({ message: `${source}.${context} - ${message}`, category: "OTHER", severity });
+				messager({
+					message: `${source}.${context} - ${message}`,
+					category: "OTHER",
+					severity,
+				});
 				return undefined;
 			};
 		};

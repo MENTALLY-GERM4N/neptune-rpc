@@ -1,4 +1,4 @@
-import { Datum, ISRCResponse } from "./types";
+import type { Datum, ISRCResponse } from "./types";
 import { getToken } from "./auth";
 import { requestJsonCached } from "../../nativeBridge/request";
 
@@ -8,12 +8,15 @@ type ISRCOptions = {
 };
 export const fetchIsrc = async (isrc: string, options?: ISRCOptions) => {
 	const { limit, offset } = options ?? { limit: 100, offset: 0 };
-	return requestJsonCached<ISRCResponse>(`https://openapi.tidal.com/tracks/byIsrc?isrc=${isrc}&countryCode=US&limit=${limit}&offset=${offset}`, {
-		headers: {
-			Authorization: `Bearer ${await getToken()}`,
-			"Content-Type": "application/vnd.tidal.v1+json",
+	return requestJsonCached<ISRCResponse>(
+		`https://openapi.tidal.com/tracks/byIsrc?isrc=${isrc}&countryCode=US&limit=${limit}&offset=${offset}`,
+		{
+			headers: {
+				Authorization: `Bearer ${await getToken()}`,
+				"Content-Type": "application/vnd.tidal.v1+json",
+			},
 		},
-	});
+	);
 };
 
 export async function* fetchIsrcIterable(isrc: string): AsyncIterable<Datum> {

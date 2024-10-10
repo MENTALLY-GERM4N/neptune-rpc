@@ -1,4 +1,4 @@
-import { TrackItem } from "neptune-types/tidal";
+import type { TrackItem } from "neptune-types/tidal";
 import type { DashManifest } from "../nativeBridge";
 
 export enum ManifestMimeType {
@@ -31,5 +31,13 @@ export type TidalManifest = {
 };
 
 export type ExtendedPlayackInfo =
-	| { playbackInfo: PlaybackInfo; manifestMimeType: ManifestMimeType.Dash; manifest: DashManifest }
-	| { playbackInfo: PlaybackInfo; manifestMimeType: ManifestMimeType.Tidal; manifest: TidalManifest };
+	| {
+			playbackInfo: PlaybackInfo;
+			manifestMimeType: ManifestMimeType.Dash;
+			manifest: DashManifest;
+	  }
+	| {
+			playbackInfo: PlaybackInfo;
+			manifestMimeType: ManifestMimeType.Tidal;
+			manifest: TidalManifest;
+	  };

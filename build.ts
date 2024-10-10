@@ -1,7 +1,7 @@
 import esbuild from "esbuild";
-import fs from "fs";
-import path from "path";
-import crypto from "crypto";
+import fs from "node:fs";
+import path from "node:path";
+import crypto from "node:crypto";
 import { minify as minifyHtml } from "html-minifier-terser";
 import CleanCSS from "clean-css";
 
@@ -20,7 +20,7 @@ const fileUrl: esbuild.Plugin = {
 				uri: args.path,
 				path: path.join(
 					args.resolveDir,
-					args.path.slice("file://".length).split("?")[0]
+					args.path.slice("file://".length).split("?")[0],
 				),
 			},
 			namespace: "file-url",
@@ -62,7 +62,7 @@ const fileUrl: esbuild.Plugin = {
 				return {
 					contents: `export default ${JSON.stringify(content)}`,
 				};
-			}
+			},
 		);
 	},
 };
@@ -101,16 +101,16 @@ const neptuneNativeImports: esbuild.Plugin = {
 
 			return {
 				contents: `import {addUnloadable} from "@plugin";const contextId=NeptuneNative.createEvalScope(${JSON.stringify(
-					outputCode
+					outputCode,
 				)});${builtExports
 					.map(
 						(e) =>
 							`export ${
-								e == "default" ? "default " : `const ${e} =`
-							} NeptuneNative.getNativeValue(contextId,${JSON.stringify(e)})`
+								e === "default" ? "default " : `const ${e} =`
+							} NeptuneNative.getNativeValue(contextId,${JSON.stringify(e)})`,
 					)
 					.join(
-						";"
+						";",
 					)};addUnloadable(() => NeptuneNative.deleteEvalScope(contextId))`,
 			};
 		});
@@ -122,14 +122,14 @@ for (const plugin of plugins) {
 	if (plugin.startsWith("_")) continue;
 	const pluginPath = path.join("./plugins/", plugin);
 	const pluginPackage = JSON.parse(
-		fs.readFileSync(path.join(pluginPath, "package.json"), "utf8")
+		fs.readFileSync(path.join(pluginPath, "package.json"), "utf8"),
 	);
 	const outfile = path.join("./dist", plugin, "index.js");
 
 	esbuild
 		.build({
 			entryPoints: [
-				"./" + path.join(pluginPath, pluginPackage.main ?? "index.js"),
+				`./${path.join(pluginPath, pluginPackage.main ?? "index.js")}`,
 			],
 			plugins: [fileUrl, neptuneNativeImports],
 			bundle: true,
@@ -154,10 +154,10 @@ for (const plugin of plugins) {
 							description: pluginPackage.description,
 							author: pluginPackage.author,
 							hash: this.read(),
-						})
+						}),
 					);
 
-					console.log("Built " + pluginPackage.displayName + "!");
+					console.log(`Built ${pluginPackage.displayName}!`);
 				});
 		});
 }
@@ -174,5 +174,5 @@ for (const theme of themes) {
 	const comment = `/*${JSON.stringify(manifest)}*/`;
 
 	fs.writeFileSync(path.join("./dist/themes", theme), comment + css);
-	console.log("Built " + manifest.name + "!");
+	console.log(`Built ${manifest.name}!`);
 }

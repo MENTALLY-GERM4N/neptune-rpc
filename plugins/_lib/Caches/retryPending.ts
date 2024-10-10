@@ -1,4 +1,6 @@
-export const retryPending = <V>(getter: () => Promise<V>): Promise<V | undefined> =>
+export const retryPending = <V>(
+	getter: () => Promise<V>,
+): Promise<V | undefined> =>
 	new Promise((res) => {
 		const timeout = setTimeout(() => {
 			clearInterval(interval);

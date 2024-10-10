@@ -6,13 +6,19 @@ import { libTrace } from "../trace";
 import type { NativeBridge } from "./nativeBridge.native";
 
 const _invoke = window.electron.ipcRenderer.invoke;
-export const invoke = <K extends keyof NativeBridge>(method: K) => <NativeBridge[K]>((...args: any) =>
+export const invoke = <K extends keyof NativeBridge>(method: K) =>
+	<NativeBridge[K]>((...args: any) =>
 		_invoke("___nativeBridge___", method, ...args).catch((err: Error) => {
-			err.stack = err.stack?.replaceAll("Error invoking remote method '___nativeBridge___': Error: ", "");
+			err.stack = err.stack?.replaceAll(
+				"Error invoking remote method '___nativeBridge___': Error: ",
+				"",
+			);
 			throw err;
 		}));
 
-invoke("setDefaultUserAgent")(navigator.userAgent).catch(libTrace.err.withContext("Failed to set default user agent"));
+invoke("setDefaultUserAgent")(navigator.userAgent).catch(
+	libTrace.err.withContext("Failed to set default user agent"),
+);
 
 export const getTrackInfo = invoke("getTrackInfo");
 export const parseDasha = invoke("parseDasha");

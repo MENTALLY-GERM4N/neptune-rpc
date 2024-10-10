@@ -1,11 +1,14 @@
-import type { Readable } from "stream";
-import { FetchyOptions, rejectNotOk, parseTotal } from "./helpers.native";
+import type { Readable } from "node:stream";
+import { type FetchyOptions, rejectNotOk, parseTotal } from "./helpers.native";
 import { requestStream } from "./requestStream.native";
 
-import { Transform } from "stream";
+import { Transform } from "node:stream";
 import { makeDecipher } from "./decrypt.native";
 
-export const requestDecodedStream = async (url: string, options?: FetchyOptions): Promise<Readable> =>
+export const requestDecodedStream = async (
+	url: string,
+	options?: FetchyOptions,
+): Promise<Readable> =>
 	new Promise(async (resolve, reject) => {
 		const { onProgress, bytesWanted, manifest } = options ?? {};
 		const reqOptions = { ...(options?.requestOptions ?? {}) };
@@ -20,7 +23,8 @@ export const requestDecodedStream = async (url: string, options?: FetchyOptions)
 
 		let downloaded = 0;
 		const total = parseTotal(res.headers);
-		if (total !== -1) onProgress?.({ total, downloaded, percent: (downloaded / total) * 100 });
+		if (total !== -1)
+			onProgress?.({ total, downloaded, percent: (downloaded / total) * 100 });
 
 		const decipher = manifest ? makeDecipher(manifest) : undefined;
 		if (decipher !== undefined) {
@@ -30,7 +34,11 @@ export const requestDecodedStream = async (url: string, options?: FetchyOptions)
 						async transform(chunk, _, callback) {
 							try {
 								downloaded += chunk.length;
-								onProgress?.({ total, downloaded, percent: (downloaded / total) * 100 });
+								onProgress?.({
+									total,
+									downloaded,
+									percent: (downloaded / total) * 100,
+								});
 								callback(null, decipher.update(chunk));
 							} catch (err) {
 								callback(<Error>err);
@@ -43,8 +51,8 @@ export const requestDecodedStream = async (url: string, options?: FetchyOptions)
 								callback(<Error>err);
 							}
 						},
-					})
-				)
+					}),
+				),
 			);
 		}
 		resolve(res);

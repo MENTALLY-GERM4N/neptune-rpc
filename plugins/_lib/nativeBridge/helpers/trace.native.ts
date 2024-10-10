@@ -22,10 +22,18 @@ export const Tracer = (source: string) => {
 		return _logger;
 	};
 
-	const log = createLogger((...args) => broadcast("NEPTUNE_RENDERER_LOG", "log", ...args));
-	const warn = createLogger((...args) => broadcast("NEPTUNE_RENDERER_LOG", "warn", ...args));
-	const err = createLogger((...args) => broadcast("NEPTUNE_RENDERER_LOG", "error", ...args));
-	const debug = createLogger((...args) => broadcast("NEPTUNE_RENDERER_LOG", "debug", ...args));
+	const log = createLogger((...args) =>
+		broadcast("NEPTUNE_RENDERER_LOG", "log", ...args),
+	);
+	const warn = createLogger((...args) =>
+		broadcast("NEPTUNE_RENDERER_LOG", "warn", ...args),
+	);
+	const err = createLogger((...args) =>
+		broadcast("NEPTUNE_RENDERER_LOG", "error", ...args),
+	);
+	const debug = createLogger((...args) =>
+		broadcast("NEPTUNE_RENDERER_LOG", "debug", ...args),
+	);
 
 	return {
 		log,

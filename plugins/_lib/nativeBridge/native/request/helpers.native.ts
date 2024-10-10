@@ -1,10 +1,14 @@
-import type { IncomingHttpHeaders, IncomingMessage } from "http";
-import type { Readable } from "stream";
+import type { IncomingHttpHeaders, IncomingMessage } from "node:http";
+import type { Readable } from "node:stream";
 import type { TidalManifest } from "../../../Caches/PlaybackInfoTypes";
-import { ExtendedRequestOptions } from "./requestStream.native";
+import type { ExtendedRequestOptions } from "./requestStream.native";
 import { libTrace } from "../../helpers/trace.native";
 
-export type DownloadProgress = { total: number; downloaded: number; percent: number };
+export type DownloadProgress = {
+	total: number;
+	downloaded: number;
+	percent: number;
+};
 type OnProgress = (progress: DownloadProgress) => void;
 export interface FetchyOptions {
 	onProgress?: OnProgress;
@@ -15,7 +19,10 @@ export interface FetchyOptions {
 }
 
 export const rejectNotOk = (res: IncomingMessage) => {
-	const OK = res.statusCode !== undefined && res.statusCode >= 200 && res.statusCode < 300;
+	const OK =
+		res.statusCode !== undefined &&
+		res.statusCode >= 200 &&
+		res.statusCode < 300;
 	if (!OK) {
 		toJson(res)
 			.then((body) => libTrace.err(`(${res.statusCode})`, body, res.url))
@@ -24,12 +31,15 @@ export const rejectNotOk = (res: IncomingMessage) => {
 	}
 	return res;
 };
-export const toJson = <T>(res: IncomingMessage): Promise<T> => toBuffer(res).then((buffer) => JSON.parse(buffer.toString()));
+export const toJson = <T>(res: IncomingMessage): Promise<T> =>
+	toBuffer(res).then((buffer) => JSON.parse(buffer.toString()));
 export const toBuffer = (stream: Readable) =>
 	new Promise<Buffer>((resolve, reject) => {
 		const chunks: Buffer[] = [];
 		stream.on("data", (chunk) => chunks.push(chunk));
-		stream.on("end", () => resolve(Buffer.concat(chunks as unknown as Uint8Array[])));
+		stream.on("end", () =>
+			resolve(Buffer.concat(chunks as unknown as Uint8Array[])),
+		);
 		stream.on("error", reject);
 	});
 export const toBlob = (stream: Readable) =>
@@ -44,9 +54,10 @@ export const parseTotal = (headers: IncomingHttpHeaders) => {
 	if (headers["content-range"]) {
 		// Server supports byte range, parse total file size from header
 		const match = /\/(\d+)$/.exec(headers["content-range"]);
-		if (match) return parseInt(match[1], 10);
+		if (match) return Number.parseInt(match[1], 10);
 	} else {
-		if (headers["content-length"] !== undefined) return parseInt(headers["content-length"], 10);
+		if (headers["content-length"] !== undefined)
+			return Number.parseInt(headers["content-length"], 10);
 	}
 	return -1;
 };

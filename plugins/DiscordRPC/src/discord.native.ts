@@ -3,9 +3,8 @@ import electron from "electron";
 
 let rpcClient: Client | null = null;
 async function getClient() {
-	const isAvailable =
-		rpcClient && rpcClient.transport.isConnected && rpcClient.user;
-	if (isAvailable) return rpcClient!;
+	const isAvailable = rpcClient?.transport.isConnected && rpcClient.user;
+	if (isAvailable && rpcClient) return rpcClient;
 
 	if (rpcClient) await rpcClient.destroy();
 	rpcClient = new Client({ clientId: "1130698654987067493" });
@@ -14,6 +13,7 @@ async function getClient() {
 	return rpcClient;
 }
 
+// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 async function setActivity(event: any, activity?: SetActivity) {
 	const client = await getClient();
 	if (!client.user) return;

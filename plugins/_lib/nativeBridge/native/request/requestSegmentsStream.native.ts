@@ -1,12 +1,15 @@
-import { type Readable, PassThrough } from "stream";
-import { FetchyOptions, rejectNotOk, parseTotal } from "./helpers.native";
+import { type Readable, PassThrough } from "node:stream";
+import { type FetchyOptions, rejectNotOk, parseTotal } from "./helpers.native";
 import { requestStream } from "./requestStream.native";
 
-export const requestSegmentsStream = async (segments: string[], options: FetchyOptions = {}) =>
+export const requestSegmentsStream = async (
+	segments: string[],
+	options: FetchyOptions = {},
+) =>
 	new Promise<Readable>(async (resolve, reject) => {
 		const combinedStream = new PassThrough();
 
-		let { onProgress, bytesWanted } = options ?? {};
+		const { onProgress, bytesWanted } = options ?? {};
 		let downloaded = 0;
 		let total = 0;
 		if (bytesWanted === undefined) {
@@ -18,11 +21,19 @@ export const requestSegmentsStream = async (segments: string[], options: FetchyO
 					res.on("data", (chunk) => {
 						chunks.push(chunk);
 						downloaded += chunk.length;
-						onProgress?.({ total, downloaded, percent: (downloaded / total) * 100 });
+						onProgress?.({
+							total,
+							downloaded,
+							percent: (downloaded / total) * 100,
+						});
 					});
 					res.on("error", reject);
-					return new Promise<Buffer>((resolve) => res.on("end", () => resolve(Buffer.concat(chunks as unknown as Uint8Array[]))));
-				})
+					return new Promise<Buffer>((resolve) =>
+						res.on("end", () =>
+							resolve(Buffer.concat(chunks as unknown as Uint8Array[])),
+						),
+					);
+				}),
 			);
 			combinedStream.write(Buffer.concat(buffers as unknown as Uint8Array[]));
 		} else {
@@ -32,7 +43,11 @@ export const requestSegmentsStream = async (segments: string[], options: FetchyO
 				res.on("data", (chunk) => {
 					combinedStream.write(chunk);
 					downloaded += chunk.length;
-					onProgress?.({ total, downloaded, percent: (downloaded / total) * 100 });
+					onProgress?.({
+						total,
+						downloaded,
+						percent: (downloaded / total) * 100,
+					});
 				});
 				res.on("error", reject);
 				await new Promise((resolve) => res.on("end", resolve));
