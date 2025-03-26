@@ -1,7 +1,7 @@
 import electron from "electron";
 
 const getCurrent = () => {
-	alert(electron.autoUpdater.getFeedURL());
+	return electron.autoUpdater.getFeedURL()
 }
 
 const setBeta = (beta: boolean) => {
