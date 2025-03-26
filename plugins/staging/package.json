@@ -1,0 +1,10 @@
+{
+	"displayName": "Staging",
+	"description": "-",
+	"author": "Seth",
+	"main": "./src/index.js",
+	"dependencies": {
+		"@inrixia/lib": "workspace:*",
+		"@xhayper/discord-rpc": "^1.2.0"
+	}
+}

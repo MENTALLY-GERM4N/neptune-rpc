@@ -1,7 +1,7 @@
 {
 	"displayName": "Discord RPC",
 	"description": "Shows what song you're currently listening to on Discord.",
-	"author": "Inrixia",
+	"author": "Inrixia & Seth",
 	"main": "./src/index.js",
 	"dependencies": {
 		"@inrixia/lib": "workspace:*",
